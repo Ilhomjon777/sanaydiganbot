@@ -8,7 +8,7 @@ import asyncio
 TOKEN = "7985405287:AAEYzkZzdtfOobjqlCYnRyTvVcJZY3RavCE"
 
 bot = Bot(token=TOKEN)
-dp = Dispatcher()
+dp = Dispatcher()  # Faqatgina Dispatcher yaratamiz, include_router kerak emas
 
 # Ma'lumotlar bazasini yaratamiz
 def create_db():
@@ -71,8 +71,7 @@ async def main():
     # Webhook'ni o‘chirib, polling rejimida ishlashni ta’minlash
     await bot.delete_webhook(drop_pending_updates=True)
 
-    # Dispatcher'ni bot bilan bog‘lash va pollingni boshlash
-    dp.include_router(dp)
+    # **include_router NI OLIB TASHLASH KERAK!**
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
