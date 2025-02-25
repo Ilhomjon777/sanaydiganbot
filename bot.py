@@ -34,13 +34,20 @@ def update_inviter(user_id):
             cursor.execute("INSERT INTO inviters (user_id, invited_count) VALUES (?, ?)", (user_id, 1))
         conn.commit()
 
-# Guruhga kim yangi odam qo‘shganini tekshiramiz
+# Guruhga yangi odam qo‘shilganini tekshiramiz
 @dp.chat_member(ChatMemberUpdated)
 async def track_new_members(update: ChatMemberUpdated):
     if update.new_chat_member.status == "member":
-        inviter = update.from_user
-        if inviter and inviter.id != update.new_chat_member.user.id:
-            update_inviter(inviter.id)
+        inviter = update.from_user  # Kim odam qo‘shganini aniqlaymiz
+        if not inviter:  
+            return  # Agar kim qo‘shgani noma’lum bo‘lsa, qaytamiz
+        
+        inviter_id = inviter.id
+        new_member_id = update.new_chat_member.user.id
+
+        if inviter_id != new_member_id:  # O'zini qo‘shmaganligiga ishonch hosil qilamiz
+            update_inviter(inviter_id)
+            logging.info(f"{inviter_id} foydalanuvchi {new_member_id} ni guruhga qo‘shdi.")
 
 # Top inviterlarni chiqarish
 @dp.message(Command("top_inviters"))
@@ -68,4 +75,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
