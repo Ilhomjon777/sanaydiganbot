@@ -5,7 +5,7 @@ from aiogram.types import ChatMemberUpdated
 from aiogram.filters import Command
 import asyncio
 
-TOKEN = "7985405287:AAEYzkZzdtfOobjqlCYnRyTvVcJZY3RavCE"
+TOKEN = "8123932765:AAG0v59JVqzaKBua6jeNutnu6ReLDp7P3Ec"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()  # Faqatgina Dispatcher yaratamiz, include_router kerak emas
