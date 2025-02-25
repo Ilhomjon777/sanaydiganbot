@@ -1,9 +1,8 @@
 import sqlite3
 import logging
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMemberUpdated
 from aiogram.filters import Command
-from aiogram.utils.executor import start_polling
 import asyncio
 
 TOKEN = "7985405287:AAEYzkZzdtfOobjqlCYnRyTvVcJZY3RavCE"
@@ -36,15 +35,15 @@ def update_inviter(user_id):
         conn.commit()
 
 # Guruhga kim yangi odam qo‘shganini tekshiramiz
-@dp.chat_member_handler()
+@dp.chat_member(ChatMemberUpdated)
 async def track_new_members(update: ChatMemberUpdated):
     if update.new_chat_member.status == "member":
-        inviter = update.old_chat_member.user  # Kim qo‘shganini aniqlash
+        inviter = update.from_user
         if inviter and inviter.id != update.new_chat_member.user.id:
             update_inviter(inviter.id)
 
 # Top inviterlarni chiqarish
-@dp.message_handler(Command("top_inviters"))
+@dp.message(Command("top_inviters"))
 async def show_top_inviters(message: types.Message):
     with sqlite3.connect("inviters.db") as conn:
         cursor = conn.cursor()
@@ -69,3 +68,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
