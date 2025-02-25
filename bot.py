@@ -1,6 +1,6 @@
 import sqlite3
 import logging
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import ChatMemberUpdated
 from aiogram.filters import Command
 import asyncio
@@ -35,19 +35,15 @@ def update_inviter(user_id):
         conn.commit()
 
 # Guruhga yangi odam qo‘shilganini tekshiramiz
-@dp.chat_member(ChatMemberUpdated)
+@dp.my_chat_member()
 async def track_new_members(update: ChatMemberUpdated):
     if update.new_chat_member.status == "member":
         inviter = update.from_user  # Kim odam qo‘shganini aniqlaymiz
-        if not inviter:  
-            return  # Agar kim qo‘shgani noma’lum bo‘lsa, qaytamiz
-        
-        inviter_id = inviter.id
-        new_member_id = update.new_chat_member.user.id
+        if not inviter or inviter.id == update.new_chat_member.user.id:
+            return  # Agar foydalanuvchi o‘zini qo‘shgan bo‘lsa yoki inviter noma’lum bo‘lsa, qaytamiz
 
-        if inviter_id != new_member_id:  # O'zini qo‘shmaganligiga ishonch hosil qilamiz
-            update_inviter(inviter_id)
-            logging.info(f"{inviter_id} foydalanuvchi {new_member_id} ni guruhga qo‘shdi.")
+        update_inviter(inviter.id)
+        logging.info(f"{inviter.id} foydalanuvchi {update.new_chat_member.user.id} ni guruhga qo‘shdi.")
 
 # Top inviterlarni chiqarish
 @dp.message(Command("top_inviters"))
@@ -75,3 +71,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
