@@ -1,6 +1,6 @@
 import sqlite3
 import logging
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMemberUpdated
 from aiogram.filters import Command
 import asyncio
@@ -67,8 +67,13 @@ async def show_top_inviters(message: types.Message):
 async def main():
     create_db()  # Bazani yaratamiz
     logging.basicConfig(level=logging.INFO)
+
+    # Webhook'ni o‘chirib, polling rejimida ishlashni ta’minlash
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    # Dispatcher'ni bot bilan bog‘lash va pollingni boshlash
+    dp.include_router(dp)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
-
