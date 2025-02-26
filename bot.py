@@ -1,16 +1,14 @@
 import sqlite3
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ChatMemberUpdated
 from aiogram.filters import Command
 import asyncio
 
 TOKEN = "8123932765:AAG0v59JVqzaKBua6jeNutnu6ReLDp7P3Ec"
-
 bot = Bot(token=TOKEN)
-dp = Dispatcher()  # Faqatgina Dispatcher yaratamiz, include_router kerak emas
+dp = Dispatcher()
 
-# Ma'lumotlar bazasini yaratamiz
+# Ma'lumotlar bazasini yaratish
 def create_db():
     with sqlite3.connect("inviters.db") as conn:
         cursor = conn.cursor()
@@ -22,30 +20,33 @@ def create_db():
         """)
         conn.commit()
 
-# Foydalanuvchini bazaga qo'shish yoki yangilash
-def update_inviter(user_id):
+# Odam qo‘shgan foydalanuvchini bazaga yozish
+def update_inviter(user_id, count):
     with sqlite3.connect("inviters.db") as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT invited_count FROM inviters WHERE user_id=?", (user_id,))
         result = cursor.fetchone()
         if result:
-            cursor.execute("UPDATE inviters SET invited_count = invited_count + 1 WHERE user_id=?", (user_id,))
+            cursor.execute("UPDATE inviters SET invited_count = invited_count + ? WHERE user_id=?", (count, user_id))
         else:
-            cursor.execute("INSERT INTO inviters (user_id, invited_count) VALUES (?, ?)", (user_id, 1))
+            cursor.execute("INSERT INTO inviters (user_id, invited_count) VALUES (?, ?)", (user_id, count))
         conn.commit()
 
-# Guruhga yangi odam qo‘shilganini tekshiramiz
-@dp.my_chat_member()
-async def track_new_members(update: ChatMemberUpdated):
-    if update.new_chat_member.status == "member":
-        inviter = update.from_user  # Kim odam qo‘shganini aniqlaymiz
-        if not inviter or inviter.id == update.new_chat_member.user.id:
-            return  # Agar foydalanuvchi o‘zini qo‘shgan bo‘lsa yoki inviter noma’lum bo‘lsa, qaytamiz
+# **Yangi odam guruhga qo‘shilganda kim qo‘shganini aniqlash**
+@dp.message()
+async def track_new_members(message: types.Message):
+    if message.new_chat_members:
+        inviter = message.from_user  # Odam qo‘shgan shaxs
+        new_members = message.new_chat_members  # Yangi qo‘shilgan odamlar ro‘yxati
+        count = len(new_members)  # Nechta odam qo‘shilganini aniqlaymiz
 
-        update_inviter(inviter.id)
-        logging.info(f"{inviter.id} foydalanuvchi {update.new_chat_member.user.id} ni guruhga qo‘shdi.")
+        if inviter.id:
+            update_inviter(inviter.id, count)
+            member_names = ", ".join([member.full_name for member in new_members])
+            logging.info(f"{inviter.id} foydalanuvchi {member_names} ni guruhga qo‘shdi.")
+            await message.reply(f"✅ {inviter.full_name} {count} ta odam qo‘shdi: {member_names}!")
 
-# Top inviterlarni chiqarish
+# Eng ko‘p odam qo‘shganlarni chiqarish
 @dp.message(Command("top_inviters"))
 async def show_top_inviters(message: types.Message):
     with sqlite3.connect("inviters.db") as conn:
@@ -65,13 +66,9 @@ async def show_top_inviters(message: types.Message):
 
 # Botni ishga tushirish
 async def main():
-    create_db()  # Bazani yaratamiz
+    create_db()
     logging.basicConfig(level=logging.INFO)
-
-    # Webhook'ni o‘chirib, polling rejimida ishlashni ta’minlash
     await bot.delete_webhook(drop_pending_updates=True)
-
-    # **include_router NI OLIB TASHLASH KERAK!**
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
