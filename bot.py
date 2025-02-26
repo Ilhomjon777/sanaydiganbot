@@ -36,15 +36,21 @@ def update_inviter(user_id, count):
 @dp.message()
 async def track_new_members(message: types.Message):
     if message.new_chat_members:
-        inviter = message.from_user  # Odam qo‘shgan shaxs
         new_members = message.new_chat_members  # Yangi qo‘shilgan odamlar ro‘yxati
         count = len(new_members)  # Nechta odam qo‘shilganini aniqlaymiz
 
-        if inviter.id:
+        # Odamni kim qo‘shganini aniqlash
+        inviter = None
+        if message.from_user and not message.from_user.is_bot:
+            inviter = message.from_user
+
+        if inviter:
             update_inviter(inviter.id, count)
             member_names = ", ".join([member.full_name for member in new_members])
-            logging.info(f"{inviter.id} foydalanuvchi {member_names} ni guruhga qo‘shdi.")
+            logging.info(f"{inviter.full_name} ({inviter.id}) {member_names} ni guruhga qo‘shdi.")
             await message.reply(f"✅ {inviter.full_name} {count} ta odam qo‘shdi: {member_names}!")
+        else:
+            logging.warning(f"Kim qo‘shganini aniqlab bo‘lmadi: {new_members}")
 
 # Eng ko‘p odam qo‘shganlarni chiqarish
 @dp.message(Command("top_inviters"))
